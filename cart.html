@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>购物车 - 📚二手以上的图书商城</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="logo"><a href="index.html">📚 二手以上的图书商城</a><span class="slogan">二手图书·循环温暖</span></div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="product-detail.html?id=1">商品详情</a>
+                <a href="cart.html" class="active">购物车 🛒<span id="cartCount" class="cart-badge">0</span></a>
+                <a href="profile.html">会员中心</a>
+                <a href="login.html">登录/注册</a>
+                <span class="user-info">陈梓淇 24215220102</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h2>我的购物车</h2>
+        <div id="cartContent"></div>
+        <div style="text-align:right; margin:20px 0;">
+            <a href="order.html" class="btn-primary">去结算</a>
+        </div>
+    </div>
+    <div class="footer">
+        <p>© 2026 📚二手以上的图书商城 | 陈梓淇 24215220102</p>
+    </div>
+    <script src="js/common.js"></script>
+    <script>
+        function loadCart() {
+            const user = getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            const cartKey = `cart_${user.id}`;
+            let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            const container = document.getElementById('cartContent');
+            if (cart.length === 0) {
+                container.innerHTML = '<p>购物车空空如也，<a href="index.html">去逛逛</a></p>';
+                return;
+            }
+            let total = 0;
+            let html = `<table class="cart-table"><thead><tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th><th>操作</th></tr></thead><tbody>`;
+            cart.forEach((item, idx) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                html += `<tr>
+                            <td><img src="${item.image}" width="60"> ${item.name}</td>
+                            <td>¥${item.price}</td>
+                            <td><input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateQuantity(${idx}, this.value)"></td>
+                            <td>¥${subtotal.toFixed(2)}</td>
+                            <td><button class="btn-danger" onclick="removeItem(${idx})">删除</button></td>
+                         </tr>`;
+            });
+            html += `</tbody><tfoot><tr><td colspan="3" style="text-align:right"><strong>总计：</strong></td><td colspan="2">¥${total.toFixed(2)}</td></tr></tfoot></table>
+                    <button class="btn-danger" onclick="clearCart()">清空购物车</button>`;
+            container.innerHTML = html;
+        }
+        function updateQuantity(index, newQty) {
+            const user = getCurrentUser();
+            if (!user) return;
+            const cartKey = `cart_${user.id}`;
+            let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            cart[index].quantity = parseInt(newQty);
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            loadCart();
+            updateCartBadge();
+        }
+        function removeItem(index) {
+            const user = getCurrentUser();
+            if (!user) return;
+            const cartKey = `cart_${user.id}`;
+            let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            cart.splice(index, 1);
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            loadCart();
+            updateCartBadge();
+        }
+        function clearCart() {
+            if (confirm('确定清空购物车吗？')) {
+                const user = getCurrentUser();
+                if (user) {
+                    localStorage.removeItem(`cart_${user.id}`);
+                    loadCart();
+                    updateCartBadge();
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
+</body>
+</html>

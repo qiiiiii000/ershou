@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>商品详情 - 墨客书坊</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="logo"><a href="index.html">📚 墨客书坊</a><span class="slogan">二手图书·循环温暖</span></div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="product-detail.html?id=1" class="active">商品详情</a>
+                <a href="cart.html">购物车 🛒<span id="cartCount" class="cart-badge">0</span></a>
+                <a href="profile.html">会员中心</a>
+                <a href="login.html">登录/注册</a>
+                <span class="user-info">陈梓淇 24215220102</span>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="margin: 30px auto;">
+        <div id="detailContainer" style="background:white; border-radius:28px; padding:30px;"></div>
+    </div>
+    <div class="footer">
+        <p>© 2026 📚二手以上的图书商城 | 陈梓淇 24215220102</p>
+    </div>
+    <script src="js/common.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('id');
+        if (!bookId) {
+            document.getElementById('detailContainer').innerHTML = '<p>参数错误</p>';
+        } else {
+            fetch('js/books.json')
+                .then(res => res.json())
+                .then(books => {
+                    const book = books.find(b => b.id == bookId);
+                    if (book) {
+                        document.getElementById('detailContainer').innerHTML = `
+                            <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                                <img src="${book.image}" style="width:300px; border-radius:20px;" onerror="this.src='images/placeholder.jpg'">
+                                <div style="flex:1;">
+                                    <h2>${book.name}</h2>
+                                    <p style="color:#b0a094;">作者：${book.author}</p>
+                                    <p>分类：${book.category}</p>
+                                    <p>库存：${book.stock} 本</p>
+                                    <p style="font-size:28px; color:#c77a4a;">¥${book.price}</p>
+                                    <p>${book.desc}</p>
+                                    <button class="btn-primary" onclick="addToCart(${book.id})">加入购物车</button>
+                                    <a href="cart.html" style="margin-left:15px;">去购物车结算</a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('detailContainer').innerHTML = '<p>图书不存在</p>';
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

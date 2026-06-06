@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>订单结算 - 📚二手以上的图书商城</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="logo"><a href="index.html">📚 二手以上的图书商城</a><span class="slogan">二手图书·循环温暖</span></div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="product-detail.html?id=1">商品详情</a>
+                <a href="cart.html">购物车 🛒<span id="cartCount" class="cart-badge">0</span></a>
+                <a href="profile.html">会员中心</a>
+                <a href="login.html">登录/注册</a>
+                <span class="user-info">陈梓淇 24215220102</span>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="text-align:center; margin:60px auto;">
+        <h2>🎉 订单已提交，等待支付</h2>
+        <div id="orderInfo" style="background:#fff5f0; padding:20px; border-radius:28px; margin:20px auto; max-width:500px;"></div>
+        <button class="btn-primary" onclick="simulatePay()">模拟支付</button>
+        <p style="margin-top:20px;"><a href="index.html">继续购物</a> | <a href="profile.html">查看我的订单</a></p>
+    </div>
+    <div class="footer">
+        <p>© 2026 📚二手以上的图书商城 | 陈梓淇 24215220102</p>
+    </div>
+    <script>
+        const order = JSON.parse(localStorage.getItem('lastOrder'));
+        const infoDiv = document.getElementById('orderInfo');
+        if (order) {
+            infoDiv.innerHTML = `<p>订单号：${order.id}</p><p>总金额：¥${order.total.toFixed(2)}</p><p>收货地址：${order.address}</p><p>联系电话：${order.phone}</p><p>订单状态：${order.status}</p>`;
+        } else {
+            infoDiv.innerHTML = '<p>没有找到订单信息，请重新下单</p>';
+        }
+        function simulatePay() {
+            if (!order) return;
+            const ordersKey = `orders_${order.userId}`;
+            let orders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+            const target = orders.find(o => o.id === order.id);
+            if (target) {
+                target.status = "已支付";
+                localStorage.setItem(ordersKey, JSON.stringify(orders));
+                localStorage.removeItem('lastOrder');
+                alert("支付成功！订单状态已更新为【已支付】");
+                window.location.href = 'profile.html';
+            } else {
+                alert("订单不存在");
+            }
+        }
+    </script>
+</body>
+</html>

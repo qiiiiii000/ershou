@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>个人中心 - 📚二手以上的图书商城</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="logo"><a href="index.html">📚 二手以上的图书商城</a><span class="slogan">二手图书·循环温暖</span></div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="product-detail.html?id=1">商品详情</a>
+                <a href="cart.html">购物车 🛒<span id="cartCount" class="cart-badge">0</span></a>
+                <a href="profile.html" class="active">会员中心</a>
+                <a href="login.html">登录/注册</a>
+                <span class="user-info">陈梓淇 24215220102</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h2>会员中心</h2>
+        <div class="profile-container">
+            <div class="profile-card">
+                <h3>基本信息</h3>
+                <div id="userInfo"></div>
+                <hr style="margin:15px 0;">
+                <h4>修改资料</h4>
+                <div class="form-group"><label>昵称/姓名</label><input type="text" id="newNickname"></div>
+                <div class="form-group"><label>联系电话</label><input type="text" id="newPhone"></div>
+                <button class="btn-primary" onclick="updateProfile()">保存修改</button>
+            </div>
+            <div class="profile-card">
+                <h3>我的订单</h3>
+                <div id="orderList"></div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>© 2026 📚二手以上的图书商城 | 陈梓淇 24215220102</p>
+    </div>
+    <script src="js/common.js"></script>
+    <script>
+        let currentUser = null;
+        function loadUserProfile() {
+            currentUser = getCurrentUser();
+            if (!currentUser) { window.location.href = 'login.html'; return; }
+            let users = JSON.parse(localStorage.getItem('users') || '[]');
+            const fullUser = users.find(u => u.id === currentUser.id);
+            if (fullUser) {
+                document.getElementById('userInfo').innerHTML = `
+                    <p><strong>用户名：</strong> ${fullUser.username}</p>
+                    <p><strong>联系电话：</strong> ${fullUser.phone || '未设置'}</p>
+                    <p><strong>注册时间：</strong> ${new Date(fullUser.regTime).toLocaleString()}</p>
+                `;
+                document.getElementById('newNickname').value = fullUser.username;
+                document.getElementById('newPhone').value = fullUser.phone || '';
+            }
+            loadOrders();
+        }
+        function updateProfile() {
+            let users = JSON.parse(localStorage.getItem('users') || '[]');
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx !== -1) {
+                users[idx].username = document.getElementById('newNickname').value.trim() || users[idx].username;
+                users[idx].phone = document.getElementById('newPhone').value.trim();
+                localStorage.setItem('users', JSON.stringify(users));
+                const current = JSON.parse(localStorage.getItem('currentUser'));
+                current.username = users[idx].username;
+                localStorage.setItem('currentUser', JSON.stringify(current));
+                alert("资料修改成功");
+                loadUserProfile();
+            }
+        }
+        function loadOrders() {
+            const ordersKey = `orders_${currentUser.id}`;
+            const orders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+            const container = document.getElementById('orderList');
+            if (orders.length === 0) { container.innerHTML = '<p>暂无订单</p>'; return; }
+            let html = '';
+            orders.forEach(order => {
+                html += `<div class="order-item">
+                            <p>订单号：${order.id} | 总价：¥${order.total.toFixed(2)} | 状态：${order.status}</p>
+                            <p>收货地址：${order.address} | 电话：${order.phone}</p>
+                            <p>下单时间：${new Date(order.createTime).toLocaleString()}</p>
+                            <details><summary>商品明细</summary><ul>${order.items.map(item => `<li>${item.name} x ${item.quantity} = ¥${(item.price*item.quantity).toFixed(2)}</li>`).join('')}</ul></details>
+                         </div>`;
+            });
+            container.innerHTML = html;
+        }
+        document.addEventListener('DOMContentLoaded', loadUserProfile);
+    </script>
+</body>
+</html>

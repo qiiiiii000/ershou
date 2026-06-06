@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚二手以上的图书商城 | 二手图书·温暖阅读</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">📚二手以上的图书商城</a>
+                <span class="slogan">二手图书·循环温暖</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="active">首页</a>
+                <a href="product-detail.html?id=1">商品详情</a>
+                <a href="cart.html">购物车 🛒<span id="cartCount" class="cart-badge">0</span></a>
+                <a href="profile.html">会员中心</a>
+                <a href="login.html">登录/注册</a>
+                <span class="user-info">陈梓淇 24215220102</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 轮播图 -->
+        <div class="carousel-container">
+            <div class="carousel-wrapper" id="carouselWrapper">
+                <div class="carousel-slide"><img src="images/banner1.jpg" alt="banner1"></div>
+                <div class="carousel-slide"><img src="images/banner2.jpg" alt="banner2"></div>
+                <div class="carousel-slide"><img src="images/banner3.jpg" alt="banner3"></div>
+            </div>
+            <button class="carousel-btn prev" id="prevBtn">‹</button>
+            <button class="carousel-btn next" id="nextBtn">›</button>
+            <div class="carousel-dots" id="dots"></div>
+        </div>
+
+        <!-- 搜索与分类 -->
+        <div class="search-category">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜你喜欢的二手书...">
+                <button id="searchBtn">🔍 搜索</button>
+            </div>
+            <div class="category-tabs">
+                <button data-cat="all" class="cat-active">全部</button>
+                <button data-cat="科技">科技</button>
+                <button data-cat="小说">小说</button>
+                <button data-cat="教材">教材</button>
+                <button data-cat="历史">历史</button>
+                <button data-cat="艺术">艺术</button>
+                <button data-cat="社科">社科</button>
+            </div>
+        </div>
+
+        <!-- 限时秒杀 -->
+        <div class="flash-sale">
+            <div class="flash-info">
+                <h3>⚡ 限时秒杀</h3>
+                <p>每日精选 暖心低价</p>
+                <div class="countdown" id="countdown">23:59:59</div>
+            </div>
+            <div class="flash-goods" id="flashGoods"></div>
+        </div>
+
+        <!-- 编辑精选（横向滚动） -->
+        <div class="section-header">
+            <h2>📚 编辑精选</h2>
+            <a href="#" class="more">查看全部 &gt;</a>
+        </div>
+        <div class="scroll-wrapper">
+            <div class="scroll-grid" id="editorPickGrid"></div>
+        </div>
+
+        <!-- 热门推荐 -->
+        <div class="section-header">
+            <h2>🔥 热门推荐</h2>
+            <a href="#" class="more">查看全部 &gt;</a>
+        </div>
+        <div class="product-grid" id="hotGrid"></div>
+
+        <!-- 新书上架 -->
+        <div class="section-header">
+            <h2>✨ 新书上架</h2>
+            <a href="#" class="more">查看全部 &gt;</a>
+        </div>
+        <div class="product-grid" id="newGrid"></div>
+
+        <!-- 本周畅销榜（横向滚动） -->
+        <div class="section-header">
+            <h2>🏆 本周畅销榜</h2>
+            <a href="#" class="more">查看全部 &gt;</a>
+        </div>
+        <div class="scroll-wrapper">
+            <div class="scroll-grid" id="bestsellerGrid"></div>
+        </div>
+
+        <!-- 为你推荐 -->
+        <div class="section-header">
+            <h2>📖 为你推荐</h2>
+        </div>
+        <div class="product-grid" id="recommendGrid"></div>
+
+        <!-- 底部特色栏 -->
+        <div class="features">
+            <div class="feature">🌍 全球购物</div>
+            <div class="feature">🚚 物流快捷</div>
+            <div class="feature">✅ 质量保证</div>
+            <div class="feature">💳 正品保障</div>
+            <div class="feature">🔄 7天无理由</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2026 📚二手以上的图书商城 | 陈梓淇 24215220102</p>
+        <p>关于我们 | 帮助中心 | 售后服务 | 商务合作 | 加入我们</p>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        let allBooks = [];
+        fetch('js/books.json')
+            .then(res => res.json())
+            .then(data => {
+                allBooks = data;
+                // 编辑精选：使用现有图书 ID（1,2,4,7,8）
+                const editorIds = [1, 2, 4, 7, 8];
+                const editorBooks = allBooks.filter(b => editorIds.includes(b.id));
+                renderScrollGrid('editorPickGrid', editorBooks);
+                // 本周畅销榜：取 hot=true 的图书（最多6本）
+                const bestsellers = allBooks.filter(b => b.hot).slice(0, 6);
+                renderScrollGrid('bestsellerGrid', bestsellers);
+                // 热门推荐（hot）
+                renderHotBooks(allBooks.filter(b => b.hot));
+                // 新书上架（new）
+                renderNewBooks(allBooks.filter(b => b.new));
+                // 为你推荐（全部）
+                renderRecommendBooks(allBooks);
+                setupFlashSale();
+            });
+
+        // 横向滚动卡片渲染
+        function renderScrollGrid(containerId, books) {
+            const container = document.getElementById(containerId);
+            if (container && books.length) {
+                container.innerHTML = books.map(book => `
+                    <div class="scroll-card">
+                        <div class="product-img">
+                            <img src="${book.image}" onerror="this.src='images/placeholder.jpg'">
+                            ${book.hot ? '<span class="badge">热卖</span>' : ''}
+                        </div>
+                        <div class="product-info">
+                            <h3>${book.name}</h3>
+                            <p class="author">${book.author}</p>
+                            <div class="price">¥${book.price}</div>
+                            <div class="actions">
+                                <button onclick="addToCart(${book.id})">加入购物车</button>
+                                <a href="product-detail.html?id=${book.id}">查看详情</a>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderHotBooks(books) {
+            document.getElementById('hotGrid').innerHTML = books.map(bookCard).join('');
+        }
+        function renderNewBooks(books) {
+            document.getElementById('newGrid').innerHTML = books.map(bookCard).join('');
+        }
+        function renderRecommendBooks(books) {
+            document.getElementById('recommendGrid').innerHTML = books.map(bookCard).join('');
+        }
+        function bookCard(book) {
+            return `
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="${book.image}" onerror="this.src='images/placeholder.jpg'">
+                        ${book.hot ? '<span class="badge">热卖</span>' : ''}
+                    </div>
+                    <div class="product-info">
+                        <h3>${book.name}</h3>
+                        <p class="author">${book.author}</p>
+                        <div class="price">¥${book.price}</div>
+                        <div class="actions">
+                            <button onclick="addToCart(${book.id})">加入购物车</button>
+                            <a href="product-detail.html?id=${book.id}">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 搜索功能
+        document.getElementById('searchBtn').onclick = () => {
+            const kw = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allBooks.filter(b => b.name.toLowerCase().includes(kw) || b.author.toLowerCase().includes(kw));
+            renderRecommendBooks(filtered);
+            document.getElementById('hotGrid').innerHTML = '';
+            document.getElementById('newGrid').innerHTML = '';
+            document.getElementById('editorPickGrid').innerHTML = '';
+            document.getElementById('bestsellerGrid').innerHTML = '';
+        };
+        // 分类筛选
+        document.querySelectorAll('.category-tabs button').forEach(btn => {
+    btn.onclick = () => {
+        const cat = btn.dataset.cat;
+        let filteredBooks;
+        if (cat === 'all') {
+            filteredBooks = allBooks;
+        } else {
+            filteredBooks = allBooks.filter(b => b.category === cat);
+        }
+        renderRecommendBooks(filteredBooks);
+        // 清空其他区域
+        document.getElementById('hotGrid').innerHTML = '';
+        document.getElementById('newGrid').innerHTML = '';
+        document.getElementById('editorPickGrid').innerHTML = '';
+        document.getElementById('bestsellerGrid').innerHTML = '';
+        // 高亮当前分类按钮
+        document.querySelectorAll('.category-tabs button').forEach(b => b.classList.remove('cat-active'));
+        btn.classList.add('cat-active');
+        
+        // 滚动到“为你推荐”区域并闪烁提示
+        const recommendSection = document.getElementById('recommendGrid');
+        if (recommendSection) {
+            recommendSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            recommendSection.style.transition = 'background 0.3s';
+            recommendSection.style.backgroundColor = '#fff0e6';
+            setTimeout(() => {
+                recommendSection.style.backgroundColor = '';
+            }, 800);
+        }
+        
+        // 如果没有找到任何图书，显示提示
+        if (filteredBooks.length === 0) {
+            document.getElementById('recommendGrid').innerHTML = '<div style="text-align:center; padding:40px;">暂无该类图书，敬请期待~</div>';
+        }
+    };
+});
+
+        // 限时秒杀
+        function setupFlashSale() {
+            const sale = allBooks.find(b => b.id === 1);
+            if (sale) {
+                document.getElementById('flashGoods').innerHTML = `
+                    <div class="flash-card">
+                        <img src="${sale.image}">
+                        <div>
+                            <p>${sale.name}</p>
+                            <div class="flash-price">¥${(sale.price * 0.8).toFixed(1)}</div>
+                        </div>
+                        <button onclick="addToCart(${sale.id})">抢购</button>
+                    </div>
+                `;
+            }
+            startCountdown();
+        }
+        function startCountdown() {
+            const end = new Date();
+            end.setHours(24, 0, 0, 0);
+            function update() {
+                const diff = end - new Date();
+                if (diff <= 0) {
+                    document.getElementById('countdown').innerText = "00:00:00";
+                    return;
+                }
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                document.getElementById('countdown').innerHTML = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            update();
+            setInterval(update, 1000);
+        }
+
+        // 轮播图逻辑
+        let current = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const total = slides.length;
+        const wrapper = document.getElementById('carouselWrapper');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots');
+        function createDots() {
+            for (let i = 0; i < total; i++) {
+                const d = document.createElement('span');
+                d.classList.add('dot');
+                if (i === 0) d.classList.add('active');
+                d.onclick = () => goTo(i);
+                dotsContainer.appendChild(d);
+            }
+        }
+        function goTo(i) {
+            current = (i + total) % total;
+            wrapper.style.transform = `translateX(-${current * 100}%)`;
+            document.querySelectorAll('.dot').forEach((dot, idx) => dot.classList.toggle('active', idx === current));
+        }
+        function next() { goTo(current + 1); }
+        function prev() { goTo(current - 1); }
+        prevBtn.onclick = prev;
+        nextBtn.onclick = next;
+        createDots();
+        let auto = setInterval(next, 4000);
+        const carousel = document.querySelector('.carousel-container');
+        carousel.onmouseenter = () => clearInterval(auto);
+        carousel.onmouseleave = () => { auto = setInterval(next, 4000); };
+        goTo(0);
+    </script>
+</body>
+</html>

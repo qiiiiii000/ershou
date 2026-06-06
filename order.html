@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>确认订单 - 📚二手以上的图书商城</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="container">
+            <div class="logo"><a href="index.html">📚 二手以上的图书商城</a><span class="slogan">二手图书·循环温暖</span></div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="product-detail.html?id=1">商品详情</a>
+                <a href="cart.html">购物车 🛒<span id="cartCount" class="cart-badge">0</span></a>
+                <a href="profile.html">会员中心</a>
+                <a href="login.html">登录/注册</a>
+                <span class="user-info">陈梓淇 24215220102</span>
+            </div>
+        </div>
+    </div>
+    <div class="container" style="margin:30px auto;">
+        <h2>确认订单信息</h2>
+        <div id="orderItems"></div>
+        <div class="form-group"><label>收货地址</label><input type="text" id="address" placeholder="请输入详细地址" required></div>
+        <div class="form-group"><label>联系电话</label><input type="text" id="contactPhone" required></div>
+        <button class="btn-primary" onclick="submitOrder()">提交订单</button>
+    </div>
+    <div class="footer">
+        <p>© 2026 📚二手以上的图书商城 | 陈梓淇 24215220102</p>
+    </div>
+    <script src="js/common.js"></script>
+    <script>
+        function loadOrderPreview() {
+            const user = getCurrentUser();
+            if (!user) return;
+            const cartKey = `cart_${user.id}`;
+            const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            if (cart.length === 0) { document.getElementById('orderItems').innerHTML = '<p>购物车为空，无法下单</p>'; return; }
+            let total = 0;
+            let html = `<table class="cart-table"><tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th></tr>`;
+            cart.forEach(item => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                html += `<tr><td>${item.name}</td><td>¥${item.price}</td><td>${item.quantity}</td><td>¥${subtotal.toFixed(2)}</td></tr>`;
+            });
+            html += `<tr><td colspan="3" style="text-align:right"><strong>总计：</strong></td><td>¥${total.toFixed(2)}</td></tr></table>`;
+            document.getElementById('orderItems').innerHTML = html;
+        }
+        function submitOrder() {
+            const user = getCurrentUser();
+            if (!user) return;
+            const address = document.getElementById('address').value.trim();
+            const phone = document.getElementById('contactPhone').value.trim();
+            if (!address || !phone) { alert("请填写完整的收货地址和联系电话"); return; }
+            const cartKey = `cart_${user.id}`;
+            const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            if (cart.length === 0) { alert("购物车为空"); return; }
+            const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const order = { id: Date.now(), userId: user.id, items: cart, total: total, address: address, phone: phone, status: "待付款", createTime: new Date().toISOString() };
+            const ordersKey = `orders_${user.id}`;
+            let orders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+            orders.push(order);
+            localStorage.setItem(ordersKey, JSON.stringify(orders));
+            localStorage.removeItem(cartKey);
+            updateCartBadge();
+            localStorage.setItem('lastOrder', JSON.stringify(order));
+            window.location.href = 'settlement.html';
+        }
+        document.addEventListener('DOMContentLoaded', loadOrderPreview);
+    </script>
+</body>
+</html>
